@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>N1学習まとめツール</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #ffffff;
+    --bg-secondary: #f5f5f3;
+    --bg-tertiary: #eeede8;
+    --text: #1a1a18;
+    --text-secondary: #6b6b67;
+    --text-tertiary: #9a9a96;
+    --border: rgba(0,0,0,0.12);
+    --border-md: rgba(0,0,0,0.22);
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', 'Yu Gothic', sans-serif;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1c1a;
+      --bg-secondary: #252523;
+      --bg-tertiary: #2e2e2b;
+      --text: #f0efe8;
+      --text-secondary: #a0a09a;
+      --text-tertiary: #6b6b67;
+      --border: rgba(255,255,255,0.1);
+      --border-md: rgba(255,255,255,0.2);
+    }
+  }
+
+  body { font-family: var(--font); background: var(--bg-tertiary); color: var(--text); min-height: 100vh; padding: 2rem 1rem; }
+  .container { max-width: 720px; margin: 0 auto; }
+  .app-header { margin-bottom: 2rem; }
+  .app-title { font-size: 22px; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 10px; }
+  .app-subtitle { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
+
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 1.5rem; }
+  .stat { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-md); padding: 14px; text-align: center; }
+  .stat-num { font-size: 22px; font-weight: 600; color: var(--text); }
+  .stat-label { font-size: 11px; color: var(--text-secondary); margin-top: 3px; }
+
+  .tabs { display: flex; gap: 2px; background: var(--bg-secondary); border-radius: var(--radius-md); padding: 4px; margin-bottom: 1.5rem; }
+  .tab { flex: 1; padding: 8px 10px; font-size: 13px; font-weight: 500; cursor: pointer; background: none; border: none; color: var(--text-secondary); border-radius: 6px; display: flex; align-items: center; justify-content: center; gap: 5px; transition: all 0.15s; font-family: var(--font); }
+  .tab.active { background: var(--bg); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  .tab:hover:not(.active) { color: var(--text); background: var(--bg-tertiary); }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+  .section-title { font-size: 11px; font-weight: 600; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.08em; }
+
+  .btn { padding: 7px 14px; font-size: 13px; font-weight: 500; border: 0.5px solid var(--border-md); border-radius: var(--radius-md); background: var(--bg); color: var(--text); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: background 0.1s; font-family: var(--font); }
+  .btn:hover { background: var(--bg-secondary); }
+  .btn.primary { background: var(--text); color: var(--bg); border-color: var(--text); }
+  .btn.primary:hover { opacity: 0.85; }
+
+  .form-group { margin-bottom: 14px; }
+  label { display: block; font-size: 12px; color: var(--text-secondary); margin-bottom: 5px; font-weight: 500; }
+  input[type=text], textarea, select { width: 100%; padding: 8px 12px; font-size: 14px; border: 0.5px solid var(--border-md); border-radius: var(--radius-md); background: var(--bg); color: var(--text); font-family: var(--font); outline: none; transition: border-color 0.15s; }
+  input[type=text]:focus, textarea:focus, select:focus { border-color: var(--text-secondary); }
+  textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1rem 1.25rem; margin-bottom: 10px; transition: border-color 0.15s; }
+  .card:hover { border-color: var(--border-md); }
+  .card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+  .card-title { font-size: 15px; font-weight: 500; color: var(--text); line-height: 1.4; }
+  .card-meta { font-size: 12px; color: var(--text-secondary); margin-top: 5px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .card-body { margin-top: 10px; font-size: 13px; color: var(--text-secondary); line-height: 1.7; }
+
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 500; }
+  .badge-blue { background: #E6F1FB; color: #0C447C; }
+  .badge-teal { background: #E1F5EE; color: #085041; }
+  .badge-amber { background: #FAEEDA; color: #633806; }
+  .badge-coral { background: #FAECE7; color: #712B13; }
+  .badge-purple { background: #EEEDFE; color: #3C3489; }
+
+  @media (prefers-color-scheme: dark) {
+    .badge-blue { background: #0C447C; color: #B5D4F4; }
+    .badge-teal { background: #085041; color: #9FE1CB; }
+    .badge-amber { background: #633806; color: #FAC775; }
+    .badge-coral { background: #712B13; color: #F5C4B3; }
+    .badge-purple { background: #3C3489; color: #CECBF6; }
+  }
+
+  .card-actions { display: flex; gap: 4px; flex-shrink: 0; }
+  .icon-btn { background: none; border: none; cursor: pointer; color: var(--text-tertiary); padding: 5px; border-radius: 6px; display: flex; align-items: center; font-size: 16px; transition: all 0.1s; }
+  .icon-btn:hover { color: var(--text); background: var(--bg-secondary); }
+
+  .empty { text-align: center; padding: 3rem 1rem; color: var(--text-tertiary); font-size: 14px; }
+  .empty i { font-size: 36px; display: block; margin-bottom: 10px; opacity: 0.35; }
+  .divider { border: none; border-top: 0.5px solid var(--border); margin: 12px 0; }
+
+  .sentence-item { background: var(--bg-secondary); border-radius: var(--radius-md); padding: 10px 12px; margin-bottom: 8px; }
+  .sentence-jp { font-size: 14px; color: var(--text); line-height: 1.7; }
+  .sentence-cn { font-size: 13px; color: var(--text-secondary); margin-top: 5px; line-height: 1.6; }
+
+  .filter-row { display: flex; gap: 8px; margin-bottom: 1rem; }
+  .filter-row input { flex: 1; }
+  .filter-row select { width: auto; min-width: 120px; }
+  .search-bar { width: 100%; margin-bottom: 1rem; }
+
+  .source-tag { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text-tertiary); background: var(--bg-secondary); padding: 2px 8px; border-radius: 99px; }
+
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.35); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 1rem; backdrop-filter: blur(2px); }
+  .modal { background: var(--bg); border-radius: var(--radius-lg); border: 0.5px solid var(--border); padding: 1.5rem; width: 100%; max-width: 540px; max-height: 90vh; overflow-y: auto; }
+  .modal-title { font-size: 16px; font-weight: 600; margin-bottom: 1.25rem; color: var(--text); }
+  .modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 1.25rem; padding-top: 1rem; border-top: 0.5px solid var(--border); }
+
+  .sent-form { background: var(--bg-secondary); border-radius: var(--radius-md); padding: 10px 12px; margin-bottom: 8px; }
+  .sent-form-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .sent-form textarea { margin-bottom: 6px; min-height: 52px; background: var(--bg); }
+  .sent-form textarea:last-child { margin-bottom: 0; }
+
+  .grammar-pattern { font-size: 17px; font-weight: 600; color: var(--text); }
+
+  @media (max-width: 480px) {
+    .row { grid-template-columns: 1fr; }
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    body { padding: 1rem 0.75rem; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="app-header">
+    <div class="app-title"><i class="ti ti-school" aria-hidden="true"></i> N1学習まとめツール</div>
+    <div class="app-subtitle">読解・語彙・文法 — データはブラウザに保存されます</div>
+  </div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('reading')"><i class="ti ti-file-text" aria-hidden="true"></i> 読解</button>
+    <button class="tab" onclick="switchTab('vocab')"><i class="ti ti-book" aria-hidden="true"></i> 語彙・表現</button>
+    <button class="tab" onclick="switchTab('grammar')"><i class="ti ti-pencil" aria-hidden="true"></i> 文法</button>
+  </div>
+
+  <div id="panel-reading" class="panel active">
+    <div class="section-header">
+      <span class="section-title">読解まとめ</span>
+      <button class="btn primary" onclick="openModal('reading')"><i class="ti ti-plus" aria-hidden="true"></i> 追加</button>
+    </div>
+    <input type="text" class="search-bar" placeholder="タイトル・出典・テーマで検索..." oninput="renderReading(this.value)" id="reading-search">
+    <div id="reading-list"></div>
+  </div>
+
+  <div id="panel-vocab" class="panel">
+    <div class="section-header">
+      <span class="section-title">語彙・表現まとめ</span>
+      <button class="btn primary" onclick="openModal('vocab')"><i class="ti ti-plus" aria-hidden="true"></i> 追加</button>
+    </div>
+    <div class="filter-row">
+      <input type="text" placeholder="語彙・読み・意味で検索..." oninput="renderVocab(this.value)" id="vocab-search">
+      <select onchange="renderVocab(document.getElementById('vocab-search').value)" id="vocab-filter">
+        <option value="">すべて</option>
+        <option value="語彙">語彙</option>
+        <option value="表現">表現</option>
+        <option value="文型">文型</option>
+      </select>
+    </div>
+    <div id="vocab-list"></div>
+  </div>
+
+  <div id="panel-grammar" class="panel">
+    <div class="section-header">
+      <span class="section-title">文法まとめ</span>
+      <button class="btn primary" onclick="openModal('grammar')"><i class="ti ti-plus" aria-hidden="true"></i> 追加</button>
+    </div>
+    <div class="filter-row">
+      <input type="text" placeholder="文法形式・意味で検索..." oninput="renderGrammar(this.value)" id="grammar-search">
+      <select onchange="renderGrammar(document.getElementById('grammar-search').value)" id="grammar-filter">
+        <option value="">すべて</option>
+        <option value="接続">接続表現</option>
+        <option value="強調">強調</option>
+        <option value="逆接">逆接</option>
+        <option value="条件">条件</option>
+        <option value="様態">様態</option>
+        <option value="その他">その他</option>
+      </select>
+    </div>
+    <div id="grammar-list"></div>
+  </div>
+</div>
+
+<div id="modal" style="display:none;">
+  <div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+      <div class="modal-title" id="modal-title"></div>
+      <div id="modal-body"></div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeModal()">キャンセル</button>
+        <button class="btn primary" onclick="saveItem()">保存する</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const READING_KEY='n1_reading_v2', VOCAB_KEY='n1_vocab_v2', GRAMMAR_KEY='n1_grammar_v1';
+let editingId=null, currentModalType=null, sentenceCount=0;
+
+function load(key){try{return JSON.parse(localStorage.getItem(key))||[];}catch{return[];}}
+function save(key,data){localStorage.setItem(key,JSON.stringify(data));}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2);}
+
+function updateStats(){
+  const r=load(READING_KEY),v=load(VOCAB_KEY),g=load(GRAMMAR_KEY);
+  document.getElementById('stats').innerHTML=`
+    <div class="stat"><div class="stat-num">${r.length}</div><div class="stat-label">読解文章</div></div>
+    <div class="stat"><div class="stat-num">${v.filter(x=>x.type==='語彙').length}</div><div class="stat-label">語彙</div></div>
+    <div class="stat"><div class="stat-num">${v.filter(x=>x.type!=='語彙').length}</div><div class="stat-label">表現・文型</div></div>
+    <div class="stat"><div class="stat-num">${g.length}</div><div class="stat-label">文法</div></div>
+  `;
+}
+
+function switchTab(tab){
+  const tabs=['reading','vocab','grammar'];
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',tabs[i]===tab));
+  tabs.forEach(t=>document.getElementById('panel-'+t).classList.toggle('active',t===tab));
+}
+
+const readingTopicColor={'社会':'badge-blue','科技':'badge-teal','文化':'badge-amber','自然':'badge-teal','経済':'badge-coral','その他':'badge-purple'};
+const vocabTypeColor={'語彙':'badge-blue','表現':'badge-coral','文型':'badge-teal'};
+const grammarCatColor={'接続':'badge-blue','強調':'badge-coral','逆接':'badge-amber','条件':'badge-teal','様態':'badge-purple','その他':'badge-purple'};
+
+function renderReading(query=''){
+  const data=load(READING_KEY), q=query.toLowerCase();
+  const filtered=data.filter(x=>!q||x.title.toLowerCase().includes(q)||(x.summary||'').toLowerCase().includes(q)||(x.topic||'').toLowerCase().includes(q)||(x.source||'').toLowerCase().includes(q));
+  const el=document.getElementById('reading-list');
+  if(!filtered.length){el.innerHTML=`<div class="empty"><i class="ti ti-file-text"></i>${data.length?'該当する結果がありません':'まだ文章がありません。「追加」から始めましょう'}</div>`;return;}
+  el.innerHTML=filtered.sort((a,b)=>b.createdAt-a.createdAt).map(item=>`
+    <div class="card">
+      <div class="card-header">
+        <div style="flex:1;min-width:0;">
+          <div class="card-title">${escHtml(item.title)}</div>
+          <div class="card-meta">
+            ${item.topic?`<span class="badge ${readingTopicColor[item.topic]||'badge-amber'}">${item.topic}</span>`:''}
+            ${item.source?`<span class="source-tag"><i class="ti ti-calendar" style="font-size:11px;"></i>${escHtml(item.source)}</span>`:''}
+            <span style="color:var(--text-tertiary);">${new Date(item.createdAt).toLocaleDateString('ja-JP')}</span>
+          </div>
+        </div>
+        <div class="card-actions">
+          <button class="icon-btn" onclick="editItem('reading','${item.id}')" title="編集"><i class="ti ti-edit"></i></button>
+          <button class="icon-btn" onclick="deleteItem('reading','${item.id}')" title="削除"><i class="ti ti-trash"></i></button>
+        </div>
+      </div>
+      ${item.summary?`<div class="card-body"><div style="font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.06em;margin-bottom:5px;">文章の要旨</div><div>${escHtml(item.summary)}</div></div>`:''}
+      ${item.sentences&&item.sentences.length?`
+        <hr class="divider">
+        <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.06em;margin-bottom:8px;">難解な文 (${item.sentences.length})</div>
+        ${item.sentences.map(s=>`<div class="sentence-item"><div class="sentence-jp">${escHtml(s.jp)}</div>${s.cn?`<div class="sentence-cn">${escHtml(s.cn)}</div>`:''}</div>`).join('')}
+      `:''}
+    </div>`).join('');
+}
+
+function renderVocab(query=''){
+  const data=load(VOCAB_KEY), q=query.toLowerCase(), tf=document.getElementById('vocab-filter').value;
+  const filtered=data.filter(x=>(!q||x.word.toLowerCase().includes(q)||(x.reading||'').toLowerCase().includes(q)||(x.meaning||'').toLowerCase().includes(q))&&(!tf||x.type===tf));
+  const el=document.getElementById('vocab-list');
+  if(!filtered.length){el.innerHTML=`<div class="empty"><i class="ti ti-book"></i>${data.length?'該当する結果がありません':'まだ登録がありません。「追加」から始めましょう'}</div>`;return;}
+  el.innerHTML=filtered.sort((a,b)=>b.createdAt-a.createdAt).map(item=>`
+    <div class="card">
+      <div class="card-header">
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;">
+            <span class="card-title" style="font-size:17px;">${escHtml(item.word)}</span>
+            ${item.reading?`<span style="font-size:13px;color:var(--text-secondary);">${escHtml(item.reading)}</span>`:''}
+            <span class="badge ${vocabTypeColor[item.type]||'badge-amber'}">${item.type}</span>
+          </div>
+          ${item.meaning?`<div class="card-meta" style="margin-top:6px;display:block;">${escHtml(item.meaning)}</div>`:''}
+          ${item.source?`<div style="margin-top:5px;"><span class="source-tag"><i class="ti ti-calendar" style="font-size:11px;"></i>${escHtml(item.source)}</span></div>`:''}
+        </div>
+        <div class="card-actions">
+          <button class="icon-btn" onclick="editItem('vocab','${item.id}')" title="編集"><i class="ti ti-edit"></i></button>
+          <button class="icon-btn" onclick="deleteItem('vocab','${item.id}')" title="削除"><i class="ti ti-trash"></i></button>
+        </div>
+      </div>
+      ${item.example?`<div class="card-body" style="margin-top:10px;"><div style="font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.06em;margin-bottom:5px;">例文</div><div>${escHtml(item.example)}</div></div>`:''}
+    </div>`).join('');
+}
+
+function renderGrammar(query=''){
+  const data=load(GRAMMAR_KEY), q=query.toLowerCase(), tf=document.getElementById('grammar-filter').value;
+  const filtered=data.filter(x=>(!q||x.pattern.toLowerCase().includes(q)||(x.meaning||'').toLowerCase().includes(q)||(x.notes||'').toLowerCase().includes(q))&&(!tf||x.category===tf));
+  const el=document.getElementById('grammar-list');
+  if(!filtered.length){el.innerHTML=`<div class="empty"><i class="ti ti-pencil"></i>${data.length?'該当する結果がありません':'まだ文法がありません。「追加」から始めましょう'}</div>`;return;}
+  el.innerHTML=filtered.sort((a,b)=>b.createdAt-a.createdAt).map(item=>`
+    <div class="card">
+      <div class="card-header">
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;">
+            <span class="grammar-pattern">${escHtml(item.pattern)}</span>
+            ${item.category?`<span class="badge ${grammarCatColor[item.category]||'badge-purple'}">${item.category}</span>`:''}
+          </div>
+          ${item.meaning?`<div class="card-meta" style="margin-top:6px;display:block;">${escHtml(item.meaning)}</div>`:''}
+          ${item.source?`<div style="margin-top:5px;"><span class="source-tag"><i class="ti ti-calendar" style="font-size:11px;"></i>${escHtml(item.source)}</span></div>`:''}
+        </div>
+        <div class="card-actions">
+          <button class="icon-btn" onclick="editItem('grammar','${item.id}')" title="編集"><i class="ti ti-edit"></i></button>
+          <button class="icon-btn" onclick="deleteItem('grammar','${item.id}')" title="削除"><i class="ti ti-trash"></i></button>
+        </div>
+      </div>
+      ${item.example?`<div class="card-body" style="margin-top:10px;"><div style="font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.06em;margin-bottom:5px;">例文</div><div>${escHtml(item.example)}</div></div>`:''}
+      ${item.notes?`<div class="card-body" style="margin-top:8px;"><div style="font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.06em;margin-bottom:5px;">メモ</div><div>${escHtml(item.notes)}</div></div>`:''}
+    </div>`).join('');
+}
+
+function openModal(type,prefillData){
+  currentModalType=type; editingId=prefillData?prefillData.id:null; sentenceCount=0;
+  const titles={reading:'読解文章を追加',vocab:'語彙・表現を追加',grammar:'文法を追加'};
+  const editTitles={reading:'読解文章を編集',vocab:'語彙・表現を編集',grammar:'文法を編集'};
+  document.getElementById('modal-title').textContent=editingId?editTitles[type]:titles[type];
+
+  if(type==='reading'){
+    const d=prefillData||{};
+    document.getElementById('modal-body').innerHTML=`
+      <div class="form-group"><label>タイトル *</label><input type="text" id="f-title" value="${escAttr(d.title||'')}" placeholder="例：AI技術と社会変革"></div>
+      <div class="row">
+        <div class="form-group"><label>テーマ</label>
+          <select id="f-topic"><option value="">選択してください</option>${['社会','科技','文化','自然','経済','その他'].map(t=>`<option value="${t}"${d.topic===t?' selected':''}>${t}</option>`).join('')}</select>
+        </div>
+        <div class="form-group"><label>出典（年度・回）</label><input type="text" id="f-source" value="${escAttr(d.source||'')}" placeholder="例：2023年7月・第2回"></div>
+      </div>
+      <div class="form-group"><label>文章の要旨</label><textarea id="f-summary" placeholder="文章の内容を簡単にまとめてください...">${escHtml(d.summary||'')}</textarea></div>
+      <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:8px;">難解な文</div>
+      <div id="sentences-container"></div>
+      <button class="btn" style="width:100%;justify-content:center;margin-top:4px;" onclick="addSentenceRow()"><i class="ti ti-plus"></i> 難解な文を追加</button>
+    `;
+    ((d.sentences&&d.sentences.length)?d.sentences:[]).forEach(s=>addSentenceRow(s));
+  } else if(type==='vocab'){
+    const d=prefillData||{};
+    document.getElementById('modal-body').innerHTML=`
+      <div class="form-group"><label>語彙・表現 *</label><input type="text" id="f-word" value="${escAttr(d.word||'')}" placeholder="例：にもかかわらず"></div>
+      <div class="row">
+        <div class="form-group"><label>読み方</label><input type="text" id="f-reading" value="${escAttr(d.reading||'')}" placeholder="例：にもかかわらず"></div>
+        <div class="form-group"><label>種類</label>
+          <select id="f-type">${['語彙','表現','文型'].map(t=>`<option value="${t}"${(d.type||'語彙')===t?' selected':''}>${t}</option>`).join('')}</select>
+        </div>
+      </div>
+      <div class="form-group"><label>意味・解説 *</label><textarea id="f-meaning" style="min-height:60px;" placeholder="意味を説明してください...">${escHtml(d.meaning||'')}</textarea></div>
+      <div class="form-group"><label>例文</label><textarea id="f-example" style="min-height:60px;" placeholder="例文...">${escHtml(d.example||'')}</textarea></div>
+      <div class="form-group"><label>出典（年度・回）</label><input type="text" id="f-source" value="${escAttr(d.source||'')}" placeholder="例：2023年7月・第2回"></div>
+    `;
+  } else {
+    const d=prefillData||{};
+    document.getElementById('modal-body').innerHTML=`
+      <div class="form-group"><label>文法形式 *</label><input type="text" id="f-pattern" value="${escAttr(d.pattern||'')}" placeholder="例：〜に反して、〜をもって"></div>
+      <div class="row">
+        <div class="form-group"><label>カテゴリー</label>
+          <select id="f-category"><option value="">選択してください</option>${['接続','強調','逆接','条件','様態','その他'].map(t=>`<option value="${t}"${d.category===t?' selected':''}>${t}</option>`).join('')}</select>
+        </div>
+        <div class="form-group"><label>出典（年度・回）</label><input type="text" id="f-source" value="${escAttr(d.source||'')}" placeholder="例：2023年7月"></div>
+      </div>
+      <div class="form-group"><label>意味・使い方 *</label><textarea id="f-meaning" style="min-height:60px;" placeholder="意味や使い方を説明してください...">${escHtml(d.meaning||'')}</textarea></div>
+      <div class="form-group"><label>例文</label><textarea id="f-example" style="min-height:60px;" placeholder="例文...">${escHtml(d.example||'')}</textarea></div>
+      <div class="form-group"><label>メモ（注意点・比較など）</label><textarea id="f-notes" style="min-height:50px;" placeholder="自由メモ...">${escHtml(d.notes||'')}</textarea></div>
+    `;
+  }
+  document.getElementById('modal').style.display='block';
+}
+
+function addSentenceRow(data){
+  data=data||{jp:'',cn:''};
+  const id=sentenceCount++;
+  const container=document.getElementById('sentences-container');
+  const div=document.createElement('div');
+  div.className='sent-form'; div.id='sent-'+id;
+  div.innerHTML=`
+    <div class="sent-form-header">
+      <span style="font-size:12px;color:var(--text-secondary);font-weight:500;">難解な文 ${id+1}</span>
+      <button class="icon-btn" onclick="document.getElementById('sent-${id}').remove()" title="削除"><i class="ti ti-x"></i></button>
+    </div>
+    <textarea class="sent-jp" placeholder="日本語の文...">${escHtml(data.jp)}</textarea>
+    <textarea class="sent-cn" placeholder="解説・訳（任意）...">${escHtml(data.cn)}</textarea>
+  `;
+  container.appendChild(div);
+}
+
+function getSentences(){
+  return Array.from(document.querySelectorAll('#sentences-container .sent-form')).map(el=>({jp:el.querySelector('.sent-jp').value.trim(),cn:el.querySelector('.sent-cn').value.trim()})).filter(s=>s.jp);
+}
+
+function saveItem(){
+  if(currentModalType==='reading'){
+    const title=document.getElementById('f-title').value.trim();
+    if(!title){alert('タイトルを入力してください');return;}
+    const data=load(READING_KEY), existing=editingId?data.find(x=>x.id===editingId):null;
+    const item={id:editingId||uid(),title,topic:document.getElementById('f-topic').value,source:document.getElementById('f-source').value.trim(),summary:document.getElementById('f-summary').value.trim(),sentences:getSentences(),createdAt:existing?existing.createdAt:Date.now()};
+    if(editingId){const i=data.findIndex(x=>x.id===editingId);if(i>-1)data[i]=item;}else data.push(item);
+    save(READING_KEY,data); renderReading(document.getElementById('reading-search').value);
+  } else if(currentModalType==='vocab'){
+    const word=document.getElementById('f-word').value.trim(), meaning=document.getElementById('f-meaning').value.trim();
+    if(!word||!meaning){alert('語彙と意味を入力してください');return;}
+    const data=load(VOCAB_KEY), existing=editingId?data.find(x=>x.id===editingId):null;
+    const item={id:editingId||uid(),word,reading:document.getElementById('f-reading').value.trim(),type:document.getElementById('f-type').value,meaning,example:document.getElementById('f-example').value.trim(),source:document.getElementById('f-source').value.trim(),createdAt:existing?existing.createdAt:Date.now()};
+    if(editingId){const i=data.findIndex(x=>x.id===editingId);if(i>-1)data[i]=item;}else data.push(item);
+    save(VOCAB_KEY,data); renderVocab(document.getElementById('vocab-search').value);
+  } else {
+    const pattern=document.getElementById('f-pattern').value.trim(), meaning=document.getElementById('f-meaning').value.trim();
+    if(!pattern||!meaning){alert('文法形式と意味を入力してください');return;}
+    const data=load(GRAMMAR_KEY), existing=editingId?data.find(x=>x.id===editingId):null;
+    const item={id:editingId||uid(),pattern,category:document.getElementById('f-category').value,source:document.getElementById('f-source').value.trim(),meaning,example:document.getElementById('f-example').value.trim(),notes:document.getElementById('f-notes').value.trim(),createdAt:existing?existing.createdAt:Date.now()};
+    if(editingId){const i=data.findIndex(x=>x.id===editingId);if(i>-1)data[i]=item;}else data.push(item);
+    save(GRAMMAR_KEY,data); renderGrammar(document.getElementById('grammar-search').value);
+  }
+  updateStats(); closeModal();
+}
+
+function editItem(type,id){
+  const keys={reading:READING_KEY,vocab:VOCAB_KEY,grammar:GRAMMAR_KEY};
+  const item=load(keys[type]).find(x=>x.id===id);
+  if(item)openModal(type,item);
+}
+
+function deleteItem(type,id){
+  if(!confirm('削除しますか？'))return;
+  const keys={reading:READING_KEY,vocab:VOCAB_KEY,grammar:GRAMMAR_KEY};
+  save(keys[type],load(keys[type]).filter(x=>x.id!==id));
+  if(type==='reading')renderReading(document.getElementById('reading-search').value);
+  else if(type==='vocab')renderVocab(document.getElementById('vocab-search').value);
+  else renderGrammar(document.getElementById('grammar-search').value);
+  updateStats();
+}
+
+function closeModal(){document.getElementById('modal').style.display='none';sentenceCount=0;editingId=null;}
+function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function escAttr(s){return String(s).replace(/"/g,'&quot;');}
+
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+renderReading(); renderVocab(); renderGrammar(); updateStats();
+</script>
+</body>
+</html>
